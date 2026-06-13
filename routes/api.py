@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 
-from models import CarbonEntry, db
+from models import CarbonEntry
 from utils.emission_factors import INDIA_DAILY_AVERAGE
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -34,16 +34,7 @@ def chart_data():
     start_date = today - timedelta(days=days - 1)
 
     entries = (
-        db.session.query(
-            CarbonEntry.date,
-            CarbonEntry.total_co2,
-            CarbonEntry.transport_co2,
-            CarbonEntry.energy_co2,
-            CarbonEntry.food_co2,
-            CarbonEntry.waste_co2,
-            CarbonEntry.water_co2,
-        )
-        .filter(
+        CarbonEntry.query.filter(
             CarbonEntry.user_id == current_user.id,
             CarbonEntry.date >= start_date,
             CarbonEntry.date <= today,

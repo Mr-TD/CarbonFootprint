@@ -55,10 +55,6 @@ class CarbonEntry(db.Model):
 
     __tablename__ = "carbon_entries"
 
-    __table_args__ = (
-        db.Index("idx_user_date", "user_id", "date"),
-    )
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
