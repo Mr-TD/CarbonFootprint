@@ -60,6 +60,11 @@ def create_app(config_name=None):
     @app.before_request
     def auto_login_guest():
         """Automatically log in a default guest user if not authenticated."""
+        # Skip database checks for static files or if user is already authenticated
+        from flask import request
+        if request.endpoint == "static" or (current_user and current_user.is_authenticated):
+            return
+
         # Check if DB is initialized (useful during testing/setup)
         try:
             if not current_user.is_authenticated:

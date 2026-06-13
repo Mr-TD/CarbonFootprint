@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
 
-from models import CarbonEntry
+from models import CarbonEntry, db
 from utils.emission_factors import INDIA_DAILY_AVERAGE
 from utils.tips_engine import get_personalized_tips, get_comparison_insight
 from utils.badges import get_badge_progress
@@ -41,7 +41,9 @@ def dashboard():
     total_entries = current_user.entries.count()
     if total_entries > 0:
         avg_co2 = (
-            sum(e.total_co2 for e in current_user.entries.all()) / total_entries
+            db.session.query(db.func.avg(CarbonEntry.total_co2))
+            .filter(CarbonEntry.user_id == current_user.id)
+            .scalar() or 0.0
         )
     else:
         avg_co2 = 0.0

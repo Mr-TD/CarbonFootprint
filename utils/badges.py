@@ -23,8 +23,7 @@ def check_and_award_badges(user):
 
     # 1. First Entry badge
     if "first_entry" not in existing:
-        entry_count = user.entries.count()
-        if entry_count >= 1:
+        if user.entries.first() is not None:
             badge = _award_badge(user, "first_entry")
             newly_awarded.append(badge)
 
@@ -84,12 +83,14 @@ def _has_consecutive_days(user, required_days):
     today = date.today()
     dates_with_entries = set()
 
-    entries = user.entries.filter(
+    # Query only the date column to optimize query payload size and avoid full object instantiation
+    dates = db.session.query(CarbonEntry.date).filter(
+        CarbonEntry.user_id == user.id,
         CarbonEntry.date >= today - timedelta(days=required_days + 7)
     ).all()
 
-    for entry in entries:
-        dates_with_entries.add(entry.date)
+    for d in dates:
+        dates_with_entries.add(d[0])
 
     # Check for any streak of required_days length
     for start_offset in range(required_days + 7):
@@ -119,37 +120,38 @@ def get_badge_progress(user):
     existing = {b.badge_type for b in user.badges.all()}
     progress = []
 
-    # First Entry
-    entry_count = user.entries.count()
+    # First Entry (check existence instead of full count)
+    has_first_entry = user.entries.first() is not None
     progress.append({
         "badge_type": "first_entry",
         "earned": "first_entry" in existing,
-        "current": min(entry_count, 1),
+        "current": 1 if has_first_entry else 0,
         "target": 1,
-        "percentage": 100 if entry_count >= 1 else 0,
+        "percentage": 100 if has_first_entry else 0,
     })
 
     # Week Streak
+    streak = _get_current_streak(user)
     progress.append({
         "badge_type": "week_streak",
         "earned": "week_streak" in existing,
-        "current": min(_get_current_streak(user), 7),
+        "current": min(streak, 7),
         "target": 7,
-        "percentage": min(100, int((_get_current_streak(user) / 7) * 100)),
+        "percentage": min(100, int((streak / 7) * 100)),
     })
 
-    # Low Carbon Day
-    low_carbon_count = user.entries.filter(CarbonEntry.total_co2 < 5.0).count()
+    # Low Carbon Day (check existence instead of full count)
+    has_low_carbon = user.entries.filter(CarbonEntry.total_co2 < 5.0).first() is not None
     progress.append({
         "badge_type": "low_carbon_day",
         "earned": "low_carbon_day" in existing,
-        "current": min(low_carbon_count, 1),
+        "current": 1 if has_low_carbon else 0,
         "target": 1,
-        "percentage": 100 if low_carbon_count >= 1 else 0,
+        "percentage": 100 if has_low_carbon else 0,
     })
 
-    # Green Commuter
-    green_count = user.entries.filter(CarbonEntry.transport_co2 <= 1.0).count()
+    # Green Commuter (limit to target of 7 to avoid loading/counting all historical entries)
+    green_count = len(user.entries.filter(CarbonEntry.transport_co2 <= 1.0).limit(7).all())
     progress.append({
         "badge_type": "green_commuter",
         "earned": "green_commuter" in existing,
@@ -158,8 +160,8 @@ def get_badge_progress(user):
         "percentage": min(100, int((green_count / 7) * 100)),
     })
 
-    # Eco Warrior
-    below_avg = user.entries.filter(CarbonEntry.total_co2 < 5.2).count()
+    # Eco Warrior (limit to target of 30 to avoid loading/counting all historical entries)
+    below_avg = len(user.entries.filter(CarbonEntry.total_co2 < 5.2).limit(30).all())
     progress.append({
         "badge_type": "eco_warrior",
         "earned": "eco_warrior" in existing,
@@ -176,13 +178,24 @@ def get_badge_progress(user):
 
 
 def _get_current_streak(user):
-    """Get the current consecutive-day streak for the user."""
+    """Get the current consecutive-day streak for the user using a single query."""
     today = date.today()
+    start_date = today - timedelta(days=59)
+
+    # Query all entry dates within the 60-day range in a single query
+    dates = db.session.query(CarbonEntry.date).filter(
+        CarbonEntry.user_id == user.id,
+        CarbonEntry.date >= start_date,
+        CarbonEntry.date <= today
+    ).all()
+
+    # Extract into a set of dates
+    entry_dates = {d[0] for d in dates}
+
     streak = 0
-    for i in range(60):  # Check up to 60 days back
+    for i in range(60):
         check_date = today - timedelta(days=i)
-        has_entry = user.entries.filter(CarbonEntry.date == check_date).first()
-        if has_entry:
+        if check_date in entry_dates:
             streak += 1
         else:
             break
