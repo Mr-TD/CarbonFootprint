@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}History — CarbonCredit{% endblock %}
+
+{% block content %}
+<section class="history-section" aria-label="Carbon Footprint History">
+    <div class="container">
+        <div class="history-header">
+            <h1>Your History</h1>
+            <p>All your carbon footprint entries in one place</p>
+        </div>
+
+        {% if entries.items %}
+        <div class="history-table-wrapper glass-card">
+            <table class="history-table" aria-label="Carbon footprint history">
+                <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Transport</th>
+                        <th scope="col">Energy</th>
+                        <th scope="col">Food</th>
+                        <th scope="col">Waste</th>
+                        <th scope="col">Water</th>
+                        <th scope="col">Total CO₂e</th>
+                        <th scope="col">vs Avg</th>
+                        <th scope="col"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries.items %}
+                    <tr class="{{ 'row-good' if entry.total_co2 <= india_average else 'row-high' }}">
+                        <td data-label="Date">{{ entry.date.strftime('%d %b %Y') }}</td>
+                        <td data-label="Transport">{{ entry.transport_co2 }} kg</td>
+                        <td data-label="Energy">{{ entry.energy_co2 }} kg</td>
+                        <td data-label="Food">{{ entry.food_co2 }} kg</td>
+                        <td data-label="Waste">{{ entry.waste_co2 }} kg</td>
+                        <td data-label="Water">{{ entry.water_co2 }} kg</td>
+                        <td data-label="Total" class="total-cell">
+                            <strong>{{ entry.total_co2 }} kg</strong>
+                        </td>
+                        <td data-label="vs Avg">
+                            {% set diff = entry.total_co2 - india_average %}
+                            {% if diff <= 0 %}
+                            <span class="badge-good" aria-label="Below average by {{ (diff|abs)|round(1) }} kg">▼ {{ (diff|abs)|round(1) }}</span>
+                            {% else %}
+                            <span class="badge-high" aria-label="Above average by {{ diff|round(1) }} kg">▲ {{ diff|round(1) }}</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Actions">
+                            <a href="{{ url_for('calculator.results', entry_id=entry.id) }}" class="btn btn-sm btn-outline" aria-label="View details for {{ entry.date.strftime('%d %b %Y') }}">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if entries.pages > 1 %}
+        <nav class="pagination" aria-label="History pages">
+            <ul class="pagination-list">
+                {% if entries.has_prev %}
+                <li>
+                    <a href="{{ url_for('dashboard.history', page=entries.prev_num) }}" class="pagination-link" aria-label="Previous page">
+                        ← Prev
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in entries.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                    <li>
+                        <a href="{{ url_for('dashboard.history', page=page_num) }}"
+                           class="pagination-link {{ 'active' if page_num == entries.page }}"
+                           {% if page_num == entries.page %}aria-current="page"{% endif %}
+                           aria-label="Page {{ page_num }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li><span class="pagination-ellipsis">…</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if entries.has_next %}
+                <li>
+                    <a href="{{ url_for('dashboard.history', page=entries.next_num) }}" class="pagination-link" aria-label="Next page">
+                        Next →
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state glass-card">
+            <span class="empty-icon" aria-hidden="true">📝</span>
+            <h2>No entries yet</h2>
+            <p>Start by calculating your first carbon footprint!</p>
+            <a href="{{ url_for('calculator.calculate') }}" class="btn btn-primary">Calculate Now</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

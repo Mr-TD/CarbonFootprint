@@ -1,0 +1,42 @@
+<!-- Navigation bar component -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+        <a href="{{ url_for('index') }}" class="nav-brand" aria-label="CarbonCredit Home">
+            <span class="nav-logo" aria-hidden="true">🌍</span>
+            <span class="nav-title">CarbonCredit</span>
+        </a>
+
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+            <span class="nav-toggle-bar"></span>
+        </button>
+
+        <ul class="nav-menu" id="nav-menu" role="menubar">
+            <li role="none"><a href="{{ url_for('dashboard.dashboard') }}" class="nav-link" role="menuitem">
+                <span aria-hidden="true">📊</span> Dashboard
+            </a></li>
+            <li role="none"><a href="{{ url_for('calculator.calculate') }}" class="nav-link nav-link-cta" role="menuitem">
+                <span aria-hidden="true">🧮</span> Calculate
+            </a></li>
+            <li role="none"><a href="{{ url_for('dashboard.history') }}" class="nav-link" role="menuitem">
+                <span aria-hidden="true">📜</span> History
+            </a></li>
+        </ul>
+    </div>
+</nav>
+
+<script>
+// Mobile navigation toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('nav-toggle');
+    const menu = document.getElementById('nav-menu');
+    if (toggle && menu) {
+        toggle.addEventListener('click', function() {
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !expanded);
+            menu.classList.toggle('nav-menu-open');
+        });
+    }
+});
+</script>

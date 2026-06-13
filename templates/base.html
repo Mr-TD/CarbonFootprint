@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CarbonCredit — Calculate, track, and reduce your daily carbon footprint with personalized insights for India.">
+    <meta name="theme-color" content="#0d1f17">
+    <meta name="author" content="CarbonCredit">
+    <meta name="{{ csrf_token() }}" name="csrf-token">
+    <title>{% block title %}CarbonCredit — Track Your Carbon Footprint{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Skip to main content link for screen readers -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    {% include 'components/_navbar.html' %}
+
+    <!-- Flash Messages -->
+    {% include 'components/_flash.html' %}
+
+    <!-- Main Content -->
+    <main id="main-content" role="main" tabindex="-1">
+        {% if error_code %}
+        <section class="error-page" aria-label="Error">
+            <div class="container">
+                <div class="glass-card error-card">
+                    <h1 class="error-code">{{ error_code }}</h1>
+                    <p class="error-message">{{ error_message }}</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+                </div>
+            </div>
+        </section>
+        {% else %}
+            {% block content %}{% endblock %}
+        {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span aria-hidden="true">🌍</span>
+                    <span>CarbonCredit</span>
+                </div>
+                <p class="footer-text">
+                    Reimagining sustainability for India, 2026.
+                    <br>
+                    <small>Emission factors sourced from CEA, IPCC, and NITI Aayog.</small>
+                </p>
+                <p class="footer-copyright">© 2026 CarbonCredit. Built with 💚 for the planet.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Accessibility helpers -->
+    <script src="{{ url_for('static', filename='js/accessibility.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

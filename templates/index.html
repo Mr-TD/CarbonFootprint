@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}CarbonCredit — Your Daily Carbon Footprint Calculator{% endblock %}
+
+{% block content %}
+<section class="hero" aria-label="Welcome to CarbonCredit">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-badge">🌱 Reimagined for India 2026</span>
+                <h1 class="hero-title">Know Your <span class="text-gradient">Carbon Footprint</span></h1>
+                <p class="hero-subtitle">
+                    Calculate, track, and reduce your daily carbon emissions with personalized insights.
+                    Powered by India-specific data from CEA and IPCC.
+                </p>
+                <div class="hero-actions">
+                    <a href="{{ url_for('calculator.calculate') }}" class="btn btn-primary btn-lg" id="hero-cta">
+                        <span aria-hidden="true">🧮</span> Calculate Today's Footprint
+                    </a>
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline btn-lg">
+                        <span aria-hidden="true">📊</span> View Dashboard
+                    </a>
+                </div>
+                <div class="hero-stats" aria-label="Key statistics">
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">5.2 kg</span>
+                        <span class="hero-stat-label">India Daily Avg CO₂</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">5</span>
+                        <span class="hero-stat-label">Categories Tracked</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value">25+</span>
+                        <span class="hero-stat-label">Actionable Tips</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual" aria-hidden="true">
+                <div class="hero-globe">
+                    <div class="globe-ring globe-ring-1"></div>
+                    <div class="globe-ring globe-ring-2"></div>
+                    <div class="globe-ring globe-ring-3"></div>
+                    <div class="globe-center">🌍</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" aria-label="Features">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Three simple steps to understand your environmental impact</p>
+
+        <div class="features-grid">
+            <article class="feature-card glass-card" tabindex="0">
+                <div class="feature-icon" aria-hidden="true">🧮</div>
+                <h3 class="feature-title">Calculate</h3>
+                <p class="feature-desc">Input your daily activities across 5 categories — transport, energy, food, waste, and water — using India-specific emission factors.</p>
+            </article>
+            <article class="feature-card glass-card" tabindex="0">
+                <div class="feature-icon" aria-hidden="true">📊</div>
+                <h3 class="feature-title">Track</h3>
+                <p class="feature-desc">Monitor your carbon footprint over time with beautiful charts. Compare against India's average and see your improvement trends.</p>
+            </article>
+            <article class="feature-card glass-card" tabindex="0">
+                <div class="feature-icon" aria-hidden="true">🌿</div>
+                <h3 class="feature-title">Reduce</h3>
+                <p class="feature-desc">Get personalized tips tailored to your lifestyle. From solar subsidies to metro routes — all relevant to India in 2026.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories" aria-label="Carbon footprint categories">
+    <div class="container">
+        <h2 class="section-title">5 Categories We Track</h2>
+        <div class="category-grid">
+            <div class="category-card glass-card">
+                <span class="category-icon" aria-hidden="true">🚗</span>
+                <h3>Transport</h3>
+                <p>Car, bike, bus, metro, train, flights — all modes covered with Indian emission factors.</p>
+            </div>
+            <div class="category-card glass-card">
+                <span class="category-icon" aria-hidden="true">⚡</span>
+                <h3>Energy</h3>
+                <p>Electricity (CEA grid factor), LPG cylinders, and solar panel offsets.</p>
+            </div>
+            <div class="category-card glass-card">
+                <span class="category-icon" aria-hidden="true">🍽️</span>
+                <h3>Food</h3>
+                <p>Vegan, vegetarian, non-veg — Indian dietary patterns with accurate per-meal data.</p>
+            </div>
+            <div class="category-card glass-card">
+                <span class="category-icon" aria-hidden="true">🗑️</span>
+                <h3>Waste</h3>
+                <p>Waste generation and recycling habits. Aligned with India's waste management rules.</p>
+            </div>
+            <div class="category-card glass-card">
+                <span class="category-icon" aria-hidden="true">💧</span>
+                <h3>Water</h3>
+                <p>Daily water consumption and the hidden carbon cost of treatment and distribution.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section" aria-label="Call to action">
+    <div class="container">
+        <div class="cta-card glass-card">
+            <h2>Ready to Make a Difference?</h2>
+            <p>Every small action counts. Start tracking your carbon footprint today and join the movement for a greener India.</p>
+            <a href="{{ url_for('calculator.calculate') }}" class="btn btn-primary btn-lg">Calculate Now</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

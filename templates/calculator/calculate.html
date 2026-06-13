@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% block title %}Calculate Your Footprint — CarbonCredit{% endblock %}
+
+{% block content %}
+<section class="calculator-section" aria-label="Carbon Footprint Calculator">
+    <div class="container">
+
+        {% if show_results and entry %}
+        <!-- ========== RESULTS VIEW ========== -->
+        <div class="results-container" aria-label="Your Carbon Footprint Results">
+            <div class="results-header">
+                <h1>Your Carbon Footprint</h1>
+                <p class="results-date">{{ entry.date.strftime('%d %B %Y') }}</p>
+            </div>
+
+            <!-- Total Score Card -->
+            <div class="result-score glass-card {{ comparison.level }}">
+                <div class="score-main">
+                    <span class="score-value" id="total-co2">{{ entry.total_co2 }}</span>
+                    <span class="score-unit">kg CO₂e</span>
+                </div>
+                <p class="score-message">{{ comparison.message }}</p>
+                <div class="score-comparison">
+                    <div class="comparison-bar">
+                        <div class="comparison-fill" style="width: {{ [comparison.percentage_of_india, 150]|min }}%" aria-label="Your footprint is {{ comparison.percentage_of_india }}% of India average"></div>
+                        <div class="comparison-marker" style="left: 100%" aria-label="India average: {{ comparison.india_average }} kg">
+                            <span class="marker-label">India Avg</span>
+                        </div>
+                    </div>
+                    <div class="comparison-legend">
+                        <span>0 kg</span>
+                        <span>{{ comparison.india_average }} kg (Avg)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="results-grid">
+                <div class="glass-card result-chart-card">
+                    <h2>Category Breakdown</h2>
+                    <div class="chart-container">
+                        <canvas id="category-chart" aria-label="Pie chart showing carbon footprint by category" role="img"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card result-breakdown-card">
+                    <h2>Detailed Breakdown</h2>
+                    <ul class="breakdown-list" role="list">
+                        <li class="breakdown-item">
+                            <span class="breakdown-icon" aria-hidden="true">🚗</span>
+                            <span class="breakdown-label">Transport</span>
+                            <span class="breakdown-value">{{ entry.transport_co2 }} kg</span>
+                        </li>
+                        <li class="breakdown-item">
+                            <span class="breakdown-icon" aria-hidden="true">⚡</span>
+                            <span class="breakdown-label">Energy</span>
+                            <span class="breakdown-value">{{ entry.energy_co2 }} kg</span>
+                        </li>
+                        <li class="breakdown-item">
+                            <span class="breakdown-icon" aria-hidden="true">🍽️</span>
+                            <span class="breakdown-label">Food</span>
+                            <span class="breakdown-value">{{ entry.food_co2 }} kg</span>
+                        </li>
+                        <li class="breakdown-item">
+                            <span class="breakdown-icon" aria-hidden="true">🗑️</span>
+                            <span class="breakdown-label">Waste</span>
+                            <span class="breakdown-value">{{ entry.waste_co2 }} kg</span>
+                        </li>
+                        <li class="breakdown-item">
+                            <span class="breakdown-icon" aria-hidden="true">💧</span>
+                            <span class="breakdown-label">Water</span>
+                            <span class="breakdown-value">{{ entry.water_co2 }} kg</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Personalized Tips -->
+            {% if tips %}
+            <div class="tips-section glass-card">
+                <h2><span aria-hidden="true">💡</span> Personalized Tips to Reduce Your Footprint</h2>
+                <div class="tips-grid">
+                    {% for tip in tips %}
+                    <article class="tip-card" tabindex="0">
+                        <span class="tip-icon" aria-hidden="true">{{ tip.icon }}</span>
+                        <div class="tip-content">
+                            <span class="tip-category">{{ tip.category }}</span>
+                            <p class="tip-text">{{ tip.tip }}</p>
+                            <span class="tip-saving">{{ tip.potential_saving }}</span>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="results-actions">
+                <a href="{{ url_for('calculator.calculate') }}" class="btn btn-primary">Recalculate</a>
+                <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline">View Dashboard</a>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- ========== CALCULATOR FORM ========== -->
+        <div class="calculator-container">
+            <div class="calculator-header">
+                <h1>Calculate Your <span class="text-gradient">Carbon Footprint</span></h1>
+                <p>Fill in your daily activities across 5 categories. It takes just 2 minutes.</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="5" aria-label="Calculator progress">
+                <div class="progress-steps">
+                    <button type="button" class="progress-step active" data-step="1" aria-label="Step 1: Transport" aria-current="step">
+                        <span class="step-icon" aria-hidden="true">🚗</span>
+                        <span class="step-label">Transport</span>
+                    </button>
+                    <div class="progress-line"><div class="progress-line-fill"></div></div>
+                    <button type="button" class="progress-step" data-step="2" aria-label="Step 2: Energy">
+                        <span class="step-icon" aria-hidden="true">⚡</span>
+                        <span class="step-label">Energy</span>
+                    </button>
+                    <div class="progress-line"><div class="progress-line-fill"></div></div>
+                    <button type="button" class="progress-step" data-step="3" aria-label="Step 3: Food">
+                        <span class="step-icon" aria-hidden="true">🍽️</span>
+                        <span class="step-label">Food</span>
+                    </button>
+                    <div class="progress-line"><div class="progress-line-fill"></div></div>
+                    <button type="button" class="progress-step" data-step="4" aria-label="Step 4: Waste">
+                        <span class="step-icon" aria-hidden="true">🗑️</span>
+                        <span class="step-label">Waste</span>
+                    </button>
+                    <div class="progress-line"><div class="progress-line-fill"></div></div>
+                    <button type="button" class="progress-step" data-step="5" aria-label="Step 5: Water">
+                        <span class="step-icon" aria-hidden="true">💧</span>
+                        <span class="step-label">Water</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live CO₂ Preview -->
+            <div class="live-preview glass-card" aria-live="polite" aria-atomic="true">
+                <span class="preview-label">Estimated CO₂e:</span>
+                <span class="preview-value" id="live-co2">0.00</span>
+                <span class="preview-unit">kg</span>
+            </div>
+
+            <form method="POST" action="{{ url_for('calculator.calculate') }}" class="calculator-form" id="calculator-form" novalidate>
+                {{ form.hidden_tag() }}
+
+                <!-- STEP 1: Transport -->
+                <fieldset class="form-step active" id="step-1" aria-label="Transport details">
+                    <legend class="step-title"><span aria-hidden="true">🚗</span> Transport</legend>
+                    <p class="step-desc">How did you get around today?</p>
+
+                    <div class="form-group">
+                        <label for="transport_mode" class="form-label">Primary Transport Mode</label>
+                        {{ form.transport_mode(class="form-input form-select", id="transport_mode") }}
+                        {% if form.transport_mode.errors %}
+                        <span class="form-error" role="alert">{{ form.transport_mode.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transport_distance" class="form-label">Distance Travelled (km)</label>
+                        {{ form.transport_distance(class="form-input", id="transport_distance", type="number") }}
+                        {% if form.transport_distance.errors %}
+                        <span class="form-error" role="alert">{{ form.transport_distance.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="step-actions">
+                        <span></span>
+                        <button type="button" class="btn btn-primary step-next" data-next="2">
+                            Next: Energy →
+                        </button>
+                    </div>
+                </fieldset>
+
+                <!-- STEP 2: Energy -->
+                <fieldset class="form-step" id="step-2" aria-label="Energy usage details">
+                    <legend class="step-title"><span aria-hidden="true">⚡</span> Energy</legend>
+                    <p class="step-desc">Your daily electricity and gas usage</p>
+
+                    <div class="form-group">
+                        <label for="electricity_kwh" class="form-label">
+                            Daily Electricity Usage (kWh)
+                            <span class="form-hint-inline" id="kwh-hint">Tip: Check your bill. Average Indian home uses ~5-10 kWh/day</span>
+                        </label>
+                        {{ form.electricity_kwh(class="form-input", id="electricity_kwh", type="number", **{'aria-describedby': 'kwh-hint'}) }}
+                        {% if form.electricity_kwh.errors %}
+                        <span class="form-error" role="alert">{{ form.electricity_kwh.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lpg_cylinders" class="form-label">Monthly LPG Cylinders</label>
+                        {{ form.lpg_cylinders(class="form-input", id="lpg_cylinders", type="number") }}
+                        {% if form.lpg_cylinders.errors %}
+                        <span class="form-error" role="alert">{{ form.lpg_cylinders.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group form-check">
+                        {{ form.has_solar(class="form-checkbox", id="has_solar") }}
+                        <label for="has_solar" class="form-check-label">
+                            <span aria-hidden="true">☀️</span> I have rooftop solar panels
+                        </label>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn btn-outline step-prev" data-prev="1">← Transport</button>
+                        <button type="button" class="btn btn-primary step-next" data-next="3">Next: Food →</button>
+                    </div>
+                </fieldset>
+
+                <!-- STEP 3: Food -->
+                <fieldset class="form-step" id="step-3" aria-label="Food and diet details">
+                    <legend class="step-title"><span aria-hidden="true">🍽️</span> Food</legend>
+                    <p class="step-desc">What did you eat today?</p>
+
+                    <div class="form-group">
+                        <label for="diet_type" class="form-label">Diet Type</label>
+                        {{ form.diet_type(class="form-input form-select", id="diet_type") }}
+                        {% if form.diet_type.errors %}
+                        <span class="form-error" role="alert">{{ form.diet_type.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="num_meals" class="form-label">Number of Meals Today</label>
+                        {{ form.num_meals(class="form-input", id="num_meals", type="number") }}
+                        {% if form.num_meals.errors %}
+                        <span class="form-error" role="alert">{{ form.num_meals.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn btn-outline step-prev" data-prev="2">← Energy</button>
+                        <button type="button" class="btn btn-primary step-next" data-next="4">Next: Waste →</button>
+                    </div>
+                </fieldset>
+
+                <!-- STEP 4: Waste -->
+                <fieldset class="form-step" id="step-4" aria-label="Waste disposal details">
+                    <legend class="step-title"><span aria-hidden="true">🗑️</span> Waste</legend>
+                    <p class="step-desc">How much waste did you generate?</p>
+
+                    <div class="form-group">
+                        <label for="waste_kg" class="form-label">
+                            Waste Generated (kg)
+                            <span class="form-hint-inline" id="waste-hint">Average: 0.3 - 0.6 kg per person per day in India</span>
+                        </label>
+                        {{ form.waste_kg(class="form-input", id="waste_kg", type="number", **{'aria-describedby': 'waste-hint'}) }}
+                        {% if form.waste_kg.errors %}
+                        <span class="form-error" role="alert">{{ form.waste_kg.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recycling_percentage" class="form-label">Recycling Percentage (%)</label>
+                        {{ form.recycling_percentage(class="form-input", id="recycling_percentage", type="number") }}
+                        {% if form.recycling_percentage.errors %}
+                        <span class="form-error" role="alert">{{ form.recycling_percentage.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn btn-outline step-prev" data-prev="3">← Food</button>
+                        <button type="button" class="btn btn-primary step-next" data-next="5">Next: Water →</button>
+                    </div>
+                </fieldset>
+
+                <!-- STEP 5: Water -->
+                <fieldset class="form-step" id="step-5" aria-label="Water usage details">
+                    <legend class="step-title"><span aria-hidden="true">💧</span> Water</legend>
+                    <p class="step-desc">Your daily water consumption</p>
+
+                    <div class="form-group">
+                        <label for="water_litres" class="form-label">
+                            Water Used (litres)
+                            <span class="form-hint-inline" id="water-hint">Average Indian household: ~135 litres per person per day</span>
+                        </label>
+                        {{ form.water_litres(class="form-input", id="water_litres", type="number", **{'aria-describedby': 'water-hint'}) }}
+                        {% if form.water_litres.errors %}
+                        <span class="form-error" role="alert">{{ form.water_litres.errors[0] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn btn-outline step-prev" data-prev="4">← Waste</button>
+                        <button type="submit" class="btn btn-primary btn-lg" id="calculate-submit">
+                            🧮 Calculate My Footprint
+                        </button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if show_results and entry %}
+<script>
+// Render category doughnut chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('category-chart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Transport', 'Energy', 'Food', 'Waste', 'Water'],
+                datasets: [{
+                    data: [
+                        {{ entry.transport_co2 }},
+                        {{ entry.energy_co2 }},
+                        {{ entry.food_co2 }},
+                        {{ entry.waste_co2 }},
+                        {{ entry.water_co2 }}
+                    ],
+                    backgroundColor: [
+                        'hsla(200, 80%, 55%, 0.8)',
+                        'hsla(45, 100%, 55%, 0.8)',
+                        'hsla(145, 70%, 45%, 0.8)',
+                        'hsla(280, 60%, 55%, 0.8)',
+                        'hsla(195, 90%, 50%, 0.8)'
+                    ],
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'hsl(0, 0%, 85%)',
+                            font: { family: 'Inter', size: 13 },
+                            padding: 16
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + ' kg CO₂e';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% else %}
+<script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+{% endif %}
+{% endblock %}

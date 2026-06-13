@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CarbonCredit{% endblock %}
+
+{% block content %}
+<section class="dashboard-section" aria-label="Carbon Footprint Dashboard">
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Dashboard</h1>
+            <a href="{{ url_for('calculator.calculate') }}" class="btn btn-primary">
+                <span aria-hidden="true">🧮</span> Log Today's Footprint
+            </a>
+        </div>
+
+        <!-- Summary Cards Row -->
+        <div class="summary-grid" aria-label="Summary statistics">
+            <div class="summary-card glass-card">
+                <span class="summary-icon" aria-hidden="true">📅</span>
+                <div class="summary-data">
+                    <span class="summary-value">{{ todays_entry.total_co2 if todays_entry else '—' }}</span>
+                    <span class="summary-label">Today's CO₂e (kg)</span>
+                </div>
+            </div>
+            <div class="summary-card glass-card">
+                <span class="summary-icon" aria-hidden="true">📊</span>
+                <div class="summary-data">
+                    <span class="summary-value">{{ avg_co2 }}</span>
+                    <span class="summary-label">Your Average (kg)</span>
+                </div>
+            </div>
+            <div class="summary-card glass-card">
+                <span class="summary-icon" aria-hidden="true">🇮🇳</span>
+                <div class="summary-data">
+                    <span class="summary-value">{{ india_average }}</span>
+                    <span class="summary-label">India Avg (kg/day)</span>
+                </div>
+            </div>
+            <div class="summary-card glass-card">
+                <span class="summary-icon" aria-hidden="true">📝</span>
+                <div class="summary-data">
+                    <span class="summary-value">{{ total_entries }}</span>
+                    <span class="summary-label">Total Entries</span>
+                </div>
+            </div>
+        </div>
+
+        {% if comparison %}
+        <!-- Comparison Insight -->
+        <div class="insight-card glass-card {{ comparison.level }}">
+            <p class="insight-message">{{ comparison.message }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+            <div class="glass-card chart-card">
+                <div class="chart-header">
+                    <h2>Weekly Trend</h2>
+                    <div class="chart-controls" role="group" aria-label="Chart time range">
+                        <button type="button" class="chart-btn active" data-days="7" aria-pressed="true">7 Days</button>
+                        <button type="button" class="chart-btn" data-days="30" aria-pressed="false">30 Days</button>
+                    </div>
+                </div>
+                <div class="chart-container chart-container-wide">
+                    <canvas id="trend-chart" aria-label="Line chart showing carbon footprint trend" role="img"></canvas>
+                </div>
+            </div>
+
+            {% if todays_entry %}
+            <div class="glass-card chart-card">
+                <h2>Today's Breakdown</h2>
+                <div class="chart-container">
+                    <canvas id="today-chart" aria-label="Doughnut chart showing today's category breakdown" role="img"></canvas>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Tips and Badges Row -->
+        <div class="bottom-grid">
+            <!-- Personalized Tips -->
+            {% if tips %}
+            <div class="glass-card">
+                <h2><span aria-hidden="true">💡</span> Quick Tips</h2>
+                <div class="dashboard-tips">
+                    {% for tip in tips %}
+                    <div class="dashboard-tip" tabindex="0">
+                        <span class="tip-icon" aria-hidden="true">{{ tip.icon }}</span>
+                        <div>
+                            <span class="tip-category-badge">{{ tip.category }}</span>
+                            <p>{{ tip.tip }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Badge Progress -->
+            <div class="glass-card">
+                <h2><span aria-hidden="true">🏆</span> Badges</h2>
+                <div class="badge-grid">
+                    {% for badge in badge_progress %}
+                    <div class="badge-card {% if badge.earned %}badge-earned{% endif %}" tabindex="0"
+                         aria-label="{{ badge.info.name }}: {{ 'Earned' if badge.earned else badge.current|string + ' of ' + badge.target|string }}">
+                        <span class="badge-icon" aria-hidden="true">{{ badge.info.icon }}</span>
+                        <span class="badge-name">{{ badge.info.name }}</span>
+                        <div class="badge-progress-bar" role="progressbar" aria-valuenow="{{ badge.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="badge-progress-fill" style="width: {{ badge.percentage }}%"></div>
+                        </div>
+                        <span class="badge-status">
+                            {% if badge.earned %}
+                            ✓ Earned
+                            {% else %}
+                            {{ badge.current }}/{{ badge.target }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% if todays_entry %}
+<script>
+// Render today's doughnut chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('today-chart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Transport', 'Energy', 'Food', 'Waste', 'Water'],
+                datasets: [{
+                    data: [
+                        {{ todays_entry.transport_co2 }},
+                        {{ todays_entry.energy_co2 }},
+                        {{ todays_entry.food_co2 }},
+                        {{ todays_entry.waste_co2 }},
+                        {{ todays_entry.water_co2 }}
+                    ],
+                    backgroundColor: [
+                        'hsla(200, 80%, 55%, 0.8)',
+                        'hsla(45, 100%, 55%, 0.8)',
+                        'hsla(145, 70%, 45%, 0.8)',
+                        'hsla(280, 60%, 55%, 0.8)',
+                        'hsla(195, 90%, 50%, 0.8)'
+                    ],
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '55%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: 'hsl(0, 0%, 85%)',
+                            font: { family: 'Inter', size: 12 },
+                            padding: 12
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
