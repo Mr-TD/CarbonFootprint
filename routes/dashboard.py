@@ -25,28 +25,17 @@ def dashboard():
         user_id=current_user.id, date=today
     ).first()
 
-    # Last 7 days entries for the sparkline
-    week_ago = today - timedelta(days=6)
-    recent_entries = (
-        CarbonEntry.query.filter(
-            CarbonEntry.user_id == current_user.id,
-            CarbonEntry.date >= week_ago,
-            CarbonEntry.date <= today,
+    # Get count and average in a single database query
+    stats = (
+        db.session.query(
+            db.func.count(CarbonEntry.id),
+            db.func.avg(CarbonEntry.total_co2)
         )
-        .order_by(CarbonEntry.date.asc())
-        .all()
+        .filter(CarbonEntry.user_id == current_user.id)
+        .first()
     )
-
-    # Stats
-    total_entries = current_user.entries.count()
-    if total_entries > 0:
-        avg_co2 = (
-            db.session.query(db.func.avg(CarbonEntry.total_co2))
-            .filter(CarbonEntry.user_id == current_user.id)
-            .scalar() or 0.0
-        )
-    else:
-        avg_co2 = 0.0
+    total_entries = stats[0] or 0
+    avg_co2 = stats[1] or 0.0
 
     # Comparison insight
     comparison = None
@@ -61,7 +50,6 @@ def dashboard():
     return render_template(
         "dashboard/dashboard.html",
         todays_entry=todays_entry,
-        recent_entries=recent_entries,
         total_entries=total_entries,
         avg_co2=round(avg_co2, 2),
         comparison=comparison,

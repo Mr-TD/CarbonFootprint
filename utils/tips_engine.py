@@ -177,8 +177,8 @@ def get_personalized_tips(entry_breakdown, max_tips=5):
     """
     Generate personalized tips based on the user's carbon footprint.
 
-    Analyzes which categories contribute most and provides
-    targeted tips with highest potential impact first.
+    Distributes tips across categories, prioritizing the highest-emitting categories
+    and returning a diverse, representative set of advice.
 
     Args:
         entry_breakdown: dict with keys 'transport', 'energy', 'food', 'waste', 'water'
@@ -188,34 +188,34 @@ def get_personalized_tips(entry_breakdown, max_tips=5):
     Returns:
         list of dicts, each containing 'category', 'tip', 'potential_saving', 'icon'
     """
+    valid_categories = [
+        (cat, co2) for cat, co2 in entry_breakdown.items()
+        if cat in TIPS_DATABASE
+    ]
+
     # Sort categories by emission amount (highest first)
     sorted_categories = sorted(
-        entry_breakdown.items(),
+        valid_categories,
         key=lambda x: x[1],
         reverse=True,
     )
 
     tips = []
-    for category, co2_value in sorted_categories:
-        if category not in TIPS_DATABASE:
-            continue
-
-        # Get tips for this category
-        category_tips = TIPS_DATABASE[category]
-
-        # Add top tips from highest-emission categories
-        for tip_data in category_tips:
+    # Distribute tips using a round-robin approach over sorted categories to avoid over-indexing on a single area
+    for tip_index in range(5):  # Each category in database has up to 5 tips
+        for category, _ in sorted_categories:
             if len(tips) >= max_tips:
                 break
-            tips.append(
-                {
+            
+            category_tips = TIPS_DATABASE[category]
+            if tip_index < len(category_tips):
+                tip_data = category_tips[tip_index]
+                tips.append({
                     "category": category.title(),
                     "tip": tip_data["tip"],
                     "potential_saving": tip_data["potential_saving"],
                     "icon": tip_data["icon"],
-                }
-            )
-
+                })
         if len(tips) >= max_tips:
             break
 
